@@ -1,39 +1,42 @@
-import {ChatWorkClient, ChatWork, FormToChatwork, sendCase} from './formToChatwork';
+import {FormToChatwork, sendCase} from './formToChatwork';
 
 describe(FormToChatwork.name, () => {
-    it ('Send message success', () => {
-        const ChatWorkMock = jest.fn<ChatWork, []>().mockImplementation(() => {
-            return {
-                sendMessage: (params: any) => {
-                    return true;
-                }
-            }
+    beforeAll(() => {
+        Logger.log = jest.fn().mockImplementation(msg => {
+            return console.log(msg);
         });
-        // const ChatWorkClientMock = jest.spyOn(ChatWorkClient.prototype, 'factory').mockReturnValue(new ChatWorkMock());
-        const ChatWorkClientMock = jest.fn<ChatWorkClient, []>().mockImplementation(() => {
-            return {
-                factory: (params: any) => {
-                    return new ChatWorkMock();
-                }
-            }
-        });
+    });
 
-        // GoogleAppsScript.Events.SheetsOnFormSubmit.
-        // const SheetsOnFormSubmitMock = jest.fn<GoogleAppsScript.Events.SheetsOnFormSubmit, []>().mockImplementation(() => {
-        //     return {
-        //         authMode: null,
-        //         triggerUid: null,
-        //         user: null,
-        //         namedValues: {
-        //             FIELD_NAME_CASE_TYPE: ['case type'],
-        //             FIELD_NAME_CASE_DETAIL: ['case detail']
-        //         },
-        //         renge: null,
-        //         values: null
-        //     }
-        // });
+    it ('Send message success', () => {
+
+        UrlFetchApp.fetch = jest.fn().mockImplementation(() => {
+            return {
+                getResponseCode: (): number => {return 200},
+                getContentText: (): string => {
+                    return "{\"message_id\": \"1234567890\"}";
+                }
+            }
+        });
 
         const formToChatwork = new FormToChatwork('Case Type', 'Case Detail');
-        formToChatwork.sendMessage();
+        const res: string = formToChatwork.sendMessage();
+
+        expect(UrlFetchApp.fetch).toBeCalled();
+        expect(res).toBe("1234567890");
+    });
+
+    it ('Send message error', () => {
+
+        UrlFetchApp.fetch = jest.fn().mockImplementation(() => {
+            return {
+                getResponseCode: (): number => {return 503},
+                getContentText: (): string => {
+                    return "{\"message\": \"error\"}";
+                }
+            }
+        });
+
+        const formToChatwork = new FormToChatwork('Case Type', 'Case Detail');
+        expect(formToChatwork.sendMessage).toThrow(Error);
     });
 });

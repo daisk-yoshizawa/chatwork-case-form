@@ -1,11 +1,4 @@
-declare let ChatWorkClient: ChatWorkClient;
-
-export interface ChatWorkClient {
-    factory(config: any): ChatWork;
-}
-export interface ChatWork {
-    sendMessage(params: any): any;
-}
+import {ChatWork} from './ChatWork';
 
 const TOKEN = '146a1cff63a579dc16f637dd42b4a67c';
 const ROOM_ID = '232088381';
@@ -20,18 +13,14 @@ export class FormToChatwork {
 
     constructor(private caseType: string, private caseDetail: string) {}
 
-    sendMessage(): void {
+    sendMessage(): string {
         let message = '';
         message += POST_LABEL_TITLE + "\n";
         message += POST_LABEL_CASE_TYPE + this.caseType + "\n";
         message += POST_LABEL_CASE_DETAIL + this.caseDetail + "\n";
 
-        const chatWorkClient = ChatWorkClient.factory({token: TOKEN});
-        const ret = chatWorkClient.sendMessage({room_id: ROOM_ID ,body: message});
-
-        if (ret == false) {
-            throw new Error("Failed send message.");
-        }
+        const chatWork: ChatWork = new ChatWork(TOKEN);
+        return chatWork.sendMessage(ROOM_ID, message);
     }
 }
 
