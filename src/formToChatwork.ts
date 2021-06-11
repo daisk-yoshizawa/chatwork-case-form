@@ -13,14 +13,23 @@ export class FormToChatwork {
 
     constructor(private caseType: string, private caseDetail: string) {}
 
+
+    private getPropertiesToken(key: "TOKEN" | "ROOM_ID"): string {
+        const token = PropertiesService.getScriptProperties().getProperty(key);
+        if (!token) {
+            throw new Error('Can\'t get property.:' + key);
+        }
+        return token;
+    }
+
     sendMessage(): string {
         let message = '';
         message += POST_LABEL_TITLE + "\n";
         message += POST_LABEL_CASE_TYPE + this.caseType + "\n";
         message += POST_LABEL_CASE_DETAIL + this.caseDetail + "\n";
 
-        const chatWork: ChatWork = new ChatWork(TOKEN);
-        return chatWork.sendMessage(ROOM_ID, message);
+        const chatWork: ChatWork = new ChatWork(this.getPropertiesToken("TOKEN"));
+        return chatWork.sendMessage(this.getPropertiesToken("ROOM_ID"), message);
     }
 }
 
